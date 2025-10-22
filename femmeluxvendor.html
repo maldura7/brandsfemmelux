@@ -351,11 +351,14 @@
                 <!-- File Uploads -->
                 <div class="form-section">
                     <h2>Documents</h2>
+                    <p style="color: #666; margin-bottom: 20px; font-size: 0.95em;">
+                        📎 <strong>Note:</strong> File uploads are optional. You can upload files now or send them via email later. File names will be included in the submission.
+                    </p>
                     
                     <div class="form-group">
-                        <label>Business Proposal <span class="required">*</span></label>
+                        <label>Business Proposal (Optional)</label>
                         <div class="file-upload">
-                            <input type="file" id="proposal" name="proposal" accept=".pdf,.doc,.docx" required onchange="updateFileName('proposal')">
+                            <input type="file" id="proposal" name="proposal" accept=".pdf,.doc,.docx" onchange="updateFileName('proposal')">
                             <label for="proposal" class="file-upload-label">
                                 <div>📄</div>
                                 <div><strong>Choose File</strong> or drag here</div>
@@ -366,9 +369,9 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Price List (Excel) <span class="required">*</span></label>
+                        <label>Price List (Excel) (Optional)</label>
                         <div class="file-upload">
-                            <input type="file" id="priceList" name="priceList" accept=".xlsx,.xls,.csv" required onchange="updateFileName('priceList')">
+                            <input type="file" id="priceList" name="priceList" accept=".xlsx,.xls,.csv" onchange="updateFileName('priceList')">
                             <label for="priceList" class="file-upload-label">
                                 <div>📊</div>
                                 <div><strong>Choose File</strong> or drag here</div>
@@ -493,19 +496,9 @@
                     priceList: priceList ? priceList.name + ' (' + priceList.size + ' bytes)' : 'None'
                 });
 
-                // Check file sizes
-                if (proposal && proposal.size > 500000) {
-                    alert('Warning: Proposal file is larger than 500KB. It may not attach properly. Consider uploading a smaller file.');
-                }
-                if (priceList && priceList.size > 500000) {
-                    alert('Warning: Price list file is larger than 500KB. It may not attach properly. Consider uploading a smaller file.');
-                }
-
-                // Convert files to base64
-                console.log('Converting files to base64...');
-                const proposalBase64 = proposal && proposal.size > 0 ? await fileToBase64(proposal) : '';
-                const priceListBase64 = priceList && priceList.size > 0 ? await fileToBase64(priceList) : '';
-                console.log('Files converted successfully');
+                // Note: Not converting files to base64 to avoid EmailJS 50KB variable limit
+                // File names will be sent in the email, and you can request files from vendors directly
+                console.log('File names will be sent (not the actual files)');
                 
                 // Prepare template parameters
                 const templateParams = {
@@ -539,14 +532,13 @@
                     special_requests: formData.get('specialRequests') || 'N/A',
                     how_heard: formData.get('howHeard') || 'N/A',
                     
-                    // File information
-                    proposal_name: proposal ? proposal.name : 'No file uploaded',
-                    price_list_name: priceList ? priceList.name : 'No file uploaded',
-                    additional_docs_names: Array.from(additionalDocs).map(f => f.name).join(', ') || 'None',
+                    // File information (names only - not attaching files due to EmailJS size limits)
+                    proposal_name: proposal ? proposal.name + ' (' + Math.round(proposal.size/1024) + 'KB)' : 'No file uploaded',
+                    price_list_name: priceList ? priceList.name + ' (' + Math.round(priceList.size/1024) + 'KB)' : 'No file uploaded',
+                    additional_docs_names: Array.from(additionalDocs).map(f => f.name + ' (' + Math.round(f.size/1024) + 'KB)').join(', ') || 'None',
                     
-                    // Attachments (base64) - only include if under 500KB
-                    proposal_file: (proposal && proposal.size <= 500000) ? proposalBase64 : 'File too large - please request directly',
-                    price_list_file: (priceList && priceList.size <= 500000) ? priceListBase64 : 'File too large - please request directly',
+                    // Instructions for getting files
+                    file_note: 'Note: Files are not attached. Please contact the vendor directly at their email to request documents.',
                     
                     // Submission date
                     submission_date: new Date().toLocaleString()
